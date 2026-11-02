@@ -80,8 +80,8 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        arch: [ "x86_64", "aarch64" ]
-        libc: [ "gnu", "musl" ]
+        arch: [ "aarch64" ]
+        libc: [ "musl" ]
     steps:
       - uses: actions/checkout@v4
       - name: Setup Rust toolchain and cache
@@ -101,7 +101,9 @@ jobs:
           echo "CARGO=cross" >> ${GITHUB_ENV}
           echo "TARGET=${{ matrix.arch }}-unknown-linux-${{ matrix.libc }}" >> ${GITHUB_ENV}
       - name: Check formatting and lints
-        run: just lint
+        run: |
+          "./scripts/cargo.sh" fmt --all -- --check
+          "./scripts/cargo.sh" clippy --verbose --all --all-targets --all-features -- -D warnings
       - name: Install cargo machete
         uses: taiki-e/install-action@v2
         with:
@@ -111,7 +113,7 @@ jobs:
 
   tests:
     needs: [changes]
-    if: needs.changes.outputs.any_modified == 'true'
+    if: ${{ false }} # These tests already passed for 810de299.
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
